@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Literature Comparison Table &mdash; Self-Trust in Robotics</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #6b7280;
+    --line: #d8dde3;
+    --head-bg: #f2f4f7;
+    --zebra: #fafbfc;
+    --accent: #1f5fa9;
+    --yes-bg: #1f9d55;
+    --yes-fg: #ffffff;
+    --yes-line: #177a41;
+    --no-bg: #d92d20;
+    --no-fg: #ffffff;
+    --no-line: #a51f16;
+    --unk-bg: #b25e09;
+    --unk-fg: #ffffff;
+    --unk-line: #8a4806;
+    --empty-bg: #eceff3;
+    --empty-fg: #6b7280;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171a;
+      --fg: #e6e8ea;
+      --muted: #98a2ad;
+      --line: #2e343b;
+      --head-bg: #1d2126;
+      --zebra: #191d21;
+      --accent: #6aa9e9;
+      --yes-bg: #1f9d55;
+      --yes-line: #35c47b;
+      --no-bg: #e03127;
+      --no-line: #ff6a5e;
+      --unk-bg: #c2700b;
+      --unk-line: #e39a3a;
+      --empty-bg: #262c33;
+      --empty-fg: #8b949e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem 1.5rem 4rem;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 1.35rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.05rem; margin: 2.25rem 0 .75rem; }
+  .sub { color: var(--muted); margin: 0 0 1.5rem; font-size: .9rem; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .5rem; }
+  button {
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 600;
+    padding: .4rem .8rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--head-bg);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  #export {
+    background: var(--yes-bg);
+    border-color: var(--yes-line);
+    color: var(--yes-fg);
+  }
+  #export:hover { filter: brightness(1.08); color: var(--yes-fg); border-color: var(--yes-line); }
+  .legend { margin-left: auto; font-size: .78rem; color: var(--muted); }
+  .swatch {
+    display: inline-block; min-width: 1.1rem; text-align: center;
+    padding: 0 .3rem; margin: 0 .1rem; border-radius: 4px;
+    border: 1px solid var(--line); font-size: .72rem; font-weight: 600;
+  }
+  .swatch.y { background: var(--yes-bg); border-color: var(--yes-line); color: var(--yes-fg); }
+  .swatch.n { background: var(--no-bg); border-color: var(--no-line); color: var(--no-fg); }
+  .swatch.u { background: var(--unk-bg); border-color: var(--unk-line); color: var(--unk-fg); }
+  .swatch.e { background: var(--empty-bg); color: var(--empty-fg); }
+  .saved { font-size: .78rem; color: var(--yes-bg); font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: .4rem .55rem; vertical-align: top; text-align: left; }
+  thead th { background: var(--head-bg); position: sticky; top: 0; z-index: 1; }
+  .schema td:first-child { font-weight: 600; white-space: nowrap; width: 14rem; }
+  .schema td:nth-child(2) { color: var(--fg); }
+  .schema td:nth-child(2)::after { content: ""; }
+  .hint { color: var(--muted); font-size: .8em; font-style: italic; }
+  .matrix th:not(:first-child), .matrix td:not(:first-child) { text-align: center; }
+  .matrix th:first-child, .matrix td:first-child { white-space: nowrap; }
+  .matrix tbody tr:nth-child(even) td { background: var(--zebra); }
+  .matrix td:first-child { color: var(--muted); }
+  [contenteditable] { outline: none; cursor: text; }
+  .cell {
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    background: var(--empty-bg) !important;
+    color: var(--empty-fg);
+    transition: filter .1s ease-in-out;
+  }
+  .cell:hover { filter: brightness(.94); }
+  .cell.y { background: var(--yes-bg) !important; color: var(--yes-fg); box-shadow: inset 0 0 0 1px var(--yes-line); }
+  .cell.n { background: var(--no-bg) !important; color: var(--no-fg); box-shadow: inset 0 0 0 1px var(--no-line); }
+  .cell.u { background: var(--unk-bg) !important; color: var(--unk-fg); box-shadow: inset 0 0 0 1px var(--unk-line); }
+  .cell.y:hover { filter: brightness(1.1); }
+  .cell.n:hover { filter: brightness(1.1); }
+  .cell.u:hover { filter: brightness(1.1); }
+  .cell:focus, [contenteditable]:focus { box-shadow: inset 0 0 0 2px var(--accent); }
+  .count { font-size: .8rem; color: var(--muted); margin: .4rem 0 0; }
+  @media print {
+    body { padding: 0; font-size: 10pt; }
+    .toolbar { display: none; }
+    thead th { position: static; }
+    .matrix tbody tr { page-break-inside: avoid; }
+    .cell { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Literature Comparison Table</h1>
+  <p class="sub">Self-trust / self-assessment for robotic perception and control. Click any matrix cell to cycle
+  <span class="swatch e">?</span> &rarr; <span class="swatch y">Yes</span> &rarr; <span class="swatch n">No</span> &rarr; <span class="swatch u">Unclear</span>.
+  Every edit is stored locally in this browser, so the table reloads exactly as you left it.</p>
+
+  <div class="toolbar">
+    <button type="button" id="export">Export CSV</button>
+    <span class="saved" id="saved"></span>
+    <span class="legend" id="tally"></span>
+  </div>
+
+  <h2>1. Fields recorded per paper</h2>
+  <table class="schema">
+    <thead>
+      <tr><th>Field</th><th>What we record</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Paper number</td><td>1&ndash;32</td></tr>
+      <tr><td>Title</td><td>Exact title</td></tr>
+      <tr><td>Year</td><td>Publication year</td></tr>
+      <tr><td>Venue</td><td>Journal / conference / preprint</td></tr>
+      <tr><td>Method</td><td>What the paper actually proposes</td></tr>
+      <tr><td>Sensor inputs</td><td>Camera, LiDAR, IMU, etc.</td></tr>
+      <tr><td>Other inputs</td><td>State, maps, uncertainty, commands, etc.</td></tr>
+      <tr><td>Output</td><td>Trust score, anomaly, uncertainty, decision, etc.</td></tr>
+      <tr><td>Estimator coupling</td><td>Independent / modifies estimator / unclear</td></tr>
+      <tr><td>Cross-sensor</td><td>Yes/No + how</td></tr>
+      <tr><td>Physical consistency</td><td>Yes/No + how</td></tr>
+      <tr><td>Fault detection</td><td>Yes/No</td></tr>
+      <tr><td>Attack detection</td><td>Yes/No</td></tr>
+      <tr><td>Uncertainty</td><td>Yes/No</td></tr>
+      <tr><td>Self-assessment</td><td>Yes/No</td></tr>
+      <tr><td>Behavior policy</td><td>None / warning / degraded / fallback / control</td></tr>
+      <tr><td>Graded behavior</td><td>Yes/No</td></tr>
+      <tr><td>Timing</td><td>Latency / frequency if reported</td></tr>
+      <tr><td>Hardware</td><td>Simulation / robot / vehicle</td></tr>
+      <tr><td>Evaluation</td><td>Dataset / simulation / physical experiment</td></tr>
+      <tr><td>Limitation</td><td>What it doesn't demonstrate</td></tr>
+      <tr><td>Relevance</td><td>Low / medium / high to our proposed architecture</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. Comparison matrix</h2>
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th>Paper</th>
+        <th>Estimator<br>independent</th>
+        <th>Attack<br>aware</th>
+        <th>Physical<br>consistency</th>
+        <th>Graded<br>behavior</th>
+        <th>Timing<br>evaluation</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p class="count" id="count"></p>
+</main>
+
+<script>
+(function () {
+  var KEY = "rst-comparison-table-v1";
+  var COLS = [
+    "Estimator independent",
+    "Attack aware",
+    "Physical consistency",
+    "Graded behavior",
+    "Timing evaluation"
+  ];
+  var CYCLE = ["?", "Yes", "No", "Unclear"];
+  var CLS = { "?": "", "Yes": "y", "No": "n", "Unclear": "u" };
+
+  function build() {
+    var body = document.getElementById("rows");
+    for (var i = 1; i <= 32; i++) {
+      var tr = document.createElement("tr");
+      var th = document.createElement("th");
+      th.setAttribute("scope", "row");
+      th.textContent = "Paper " + i;
+      th.contentEditable = "true";
+      th.spellcheck = false;
+      th.dataset.label = "Paper " + i;
+      tr.appendChild(th);
+      for (var c = 0; c < COLS.length; c++) {
+        var td = document.createElement("td");
+        td.className = "cell";
+        td.textContent = "?";
+        td.tabIndex = 0;
+        td.dataset.paper = i;
+        td.dataset.col = c;
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    }
+  }
+
+  function setCell(td, value) {
+    td.textContent = value;
+    td.className = "cell" + (CLS[value] ? " " + CLS[value] : "");
+  }
+
+  function tally() {
+    var n = { "?": 0, "Yes": 0, "No": 0, "Unclear": 0 };
+    document.querySelectorAll("#rows td.cell").forEach(function (td) {
+      var v = td.textContent.trim();
+      if (n[v] === undefined) n[v] = 0;
+      n[v]++;
+    });
+    document.getElementById("tally").textContent =
+      "Yes " + n["Yes"] + "  \u00b7  No " + n["No"] + "  \u00b7  Unclear " + n["Unclear"] +
+      "  \u00b7  Unfilled " + n["?"];
+    document.getElementById("count").textContent =
+      COLS.length + " criteria \u00d7 32 papers = " + (COLS.length * 32) + " cells.";
+  }
+
+  function save() {
+    var cells = [], labels = [];
+    document.querySelectorAll("#rows td.cell").forEach(function (td) {
+      cells.push(td.textContent.trim());
+    });
+    document.querySelectorAll("#rows th").forEach(function (th) {
+      labels.push(th.textContent.trim());
+    });
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ cells: cells, labels: labels, at: Date.now() }));
+      flashSaved();
+    } catch (e) {
+      var el = document.getElementById("saved");
+      el.textContent = "Local save unavailable";
+      el.style.color = "var(--no-bg)";
+    }
+  }
+
+  var stampTimer = null;
+  function flashSaved() {
+    var el = document.getElementById("saved");
+    if (!el) return;
+    el.style.color = "";
+    el.textContent = "Saved locally \u2713";
+    clearTimeout(stampTimer);
+    stampTimer = setTimeout(function () { el.textContent = ""; }, 2500);
+  }
+
+  function restore() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return false;
+      var data = JSON.parse(raw);
+      if (Array.isArray(data.labels)) {
+        document.querySelectorAll("#rows th").forEach(function (th, i) {
+          if (data.labels[i]) th.textContent = data.labels[i];
+        });
+      }
+      if (Array.isArray(data.cells)) {
+        data.cells.forEach(function (v, i) {
+          var td = document.querySelector('#rows td[data-idx="' + i + '"]');
+          if (td && CYCLE.indexOf(v) !== -1) setCell(td, v);
+        });
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
+  build();
+  document.querySelectorAll("#rows td.cell").forEach(function (td, idx) {
+    td.dataset.idx = idx;
+  });
+  restore();
+
+  document.getElementById("rows").addEventListener("click", function (e) {
+    var td = e.target.closest("td.cell");
+    if (!td) return;
+    var cur = td.textContent.trim();
+    var next = CYCLE[(CYCLE.indexOf(cur) + 1) % CYCLE.length];
+    setCell(td, next);
+    save();
+    tally();
+  });
+
+  document.getElementById("rows").addEventListener("keydown", function (e) {
+    var td = e.target.closest("td.cell");
+    if (!td) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      td.click();
+    } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      var next = td.nextElementSibling;
+      if (next) next.focus();
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      var prev = td.previousElementSibling;
+      if (prev) prev.focus();
+    }
+  });
+
+  document.getElementById("rows").addEventListener("blur", function () { save(); tally(); }, true);
+  document.getElementById("rows").addEventListener("input", function () { save(); tally(); }, true);
+
+  document.getElementById("export").addEventListener("click", function () {
+    var lines = ["Paper," + COLS.join(",")];
+    for (var i = 1; i <= 32; i++) {
+      var tr = document.querySelectorAll("#rows tr")[i - 1];
+      var label = tr.querySelector("th").textContent.trim().replace(/,/g, " ");
+      var vals = Array.prototype.map.call(tr.querySelectorAll("td.cell"), function (td) {
+        return td.textContent.trim();
+      });
+      lines.push(label + "," + vals.join(","));
+    }
+    var blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "comparison-table.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  tally();
+})();
+</script>
+</body>
+</html>
